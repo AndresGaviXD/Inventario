@@ -28,7 +28,7 @@ Aplicación web para registrar entradas y salidas de productos y consultar el in
 
 ### 2. Cadena de conexión
 
-Necesitas abrir el archivo `InventarioApi/appsettings.json` y reemplazar `1234` por la contraseña del usuario `postgres` que tengas configurada en tu maquina.
+Necesitas abrir el archivo `InventarioApi/appsettings.json` y en Password ingresa la contraseña del usuario `postgres` que tengas configurada en tu maquina, o en su defecto, el usuario con el que hayas ejecutado el scritp realizado para esta prueba.
 
 ### 3. Ejecutar
 
