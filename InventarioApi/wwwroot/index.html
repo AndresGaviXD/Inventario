@@ -1,0 +1,265 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Control de Inventario</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <div id="vistaLogin" class="login hidden">
+        <div class="login-box">
+            <div class="login-h">
+                <h1>Control de Inventario</h1>
+                <p>Acceso al sistema</p>
+            </div>
+            <form id="formLogin" class="login-b">
+                <label class="f">
+                    Usuario
+                    <input id="loginUser" required minlength="3" maxlength="50" autocomplete="username">
+                </label>
+                <label class="f">
+                    Contraseña
+                    <input id="loginPass" type="password" required minlength="6" maxlength="100" autocomplete="current-password">
+                </label>
+                <div id="loginErr" class="msg-err"></div>
+                <button class="btn btn-primary" type="submit">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="vistaApp" class="shell hidden">
+
+        <header class="topbar">
+            <div class="brand">Control de Inventario</div>
+            <div class="top-right">
+                <span id="reloj" class="mono"></span>
+                <span>Usuario: <b id="lblUser"></b> · <span id="lblRol"></span></span>
+                <button id="btnSalir" class="btn btn-sm btn-ghost">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <nav class="side">
+            <div class="grp">Operación</div>
+            <button data-view="panel" class="active">Panel</button>
+            <button data-view="inventario">Inventario</button>
+            <button data-view="movimientos">Movimientos</button>
+            <div class="grp">Maestros</div>
+            <button data-view="productos">Productos</button>
+            <div class="grp solo-admin">Administración</div>
+            <button data-view="usuarios" class="solo-admin">Usuarios</button>
+        </nav>
+
+        <main class="main">
+
+            <!-- PANEL -->
+            <section id="v-panel" class="view">
+                <div class="page-h"><h2>Panel general</h2><span>Resumen del estado actual</span></div>
+                <div class="kpis">
+                    <div class="kpi"><div class="l">Productos activos</div><div class="v" id="kProd">0</div></div>
+                    <div class="kpi acc"><div class="l">Unidades en stock</div><div class="v" id="kUni">0</div></div>
+                    <div class="kpi bad"><div class="l">Productos bajo mínimo</div><div class="v" id="kBajo">0</div></div>
+                    <div class="kpi"><div class="l">Movimientos hoy</div><div class="v" id="kHoy">0</div></div>
+                </div>
+                <div class="cols2">
+                    <div class="panel">
+                        <div class="panel-h">Alertas de stock</div>
+                        <div class="scroll" style="max-height:320px">
+                            <table class="tbl">
+                                <thead><tr><th>Código</th><th>Producto</th><th class="num">Stock</th><th class="num">Mínimo</th></tr></thead>
+                                <tbody id="tbAlertas"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-h">Últimos movimientos</div>
+                        <div class="scroll" style="max-height:320px">
+                            <table class="tbl">
+                                <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th class="num">Cant.</th></tr></thead>
+                                <tbody id="tbUltimos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INVENTARIO -->
+            <section id="v-inventario" class="view hidden">
+                <div class="page-h"><h2>Inventario actual</h2><span id="cntInv"></span></div>
+                <div class="panel">
+                    <div class="toolbar">
+                        <input id="buscar" class="grow" placeholder="Buscar por código o nombre">
+                        <label class="chk"><input type="checkbox" id="soloBajo"> Solo bajo stock</label>
+                        <div class="sp">
+                            <button class="btn" id="btnCsv">Exportar CSV</button>
+                            <button class="btn" id="btnRefrescar">Actualizar</button>
+                        </div>
+                    </div>
+                    <div class="scroll">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th class="num">Entradas</th>
+                                    <th class="num">Salidas</th>
+                                    <th class="num">Stock</th>
+                                    <th class="num">Mínimo</th>
+                                    <th>Nivel</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbInv"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MOVIMIENTOS -->
+            <section id="v-movimientos" class="view hidden">
+                <div class="page-h"><h2>Movimientos</h2><span>Últimos 200 registros</span></div>
+                <div class="panel">
+                    <div class="toolbar">
+                        <select id="fTipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="E">Entradas</option>
+                            <option value="S">Salidas</option>
+                        </select>
+                        <input id="fHist" class="grow" placeholder="Filtrar por producto, usuario u observación">
+                        <div class="sp"><button class="btn btn-primary" id="btnNuevoMov">Nuevo movimiento</button></div>
+                    </div>
+                    <div class="scroll">
+                        <table class="tbl">
+                            <thead>
+                                <tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th class="num">Cant.</th><th>Usuario</th><th>Observación</th></tr>
+                            </thead>
+                            <tbody id="tbHist"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRODUCTOS -->
+            <section id="v-productos" class="view hidden">
+                <div class="page-h"><h2>Maestro de productos</h2><span id="cntProd"></span></div>
+
+                <div class="panel solo-admin" style="margin-bottom:12px">
+                    <div class="panel-h"><span id="prodTitulo">Alta de producto</span></div>
+                    <form id="formProd" class="panel-b form-grid">
+                        <input type="hidden" id="prodId">
+                        <label class="f">Código<input id="prodCodigo" required maxlength="30"></label>
+                        <label class="f">Nombre<input id="prodNombre" required maxlength="150"></label>
+                        <label class="f">Stock mínimo<input id="prodMin" type="number" min="0" value="0" required></label>
+                        <label class="f full">Descripción<input id="prodDesc"></label>
+                        <div class="full">
+                            <button class="btn btn-primary" type="submit">Guardar producto</button>
+                            <button class="btn hidden" type="button" id="btnCancelProd">Cancelar edición</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="toolbar solo-admin">
+                        <label class="chk"><input type="checkbox" id="verInact"> Mostrar inactivos</label>
+                    </div>
+                    <div class="scroll">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th class="num">Stock mínimo</th>
+                                    <th>Estado</th>
+                                    <th class="solo-admin"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbProd"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USUARIOS -->
+            <section id="v-usuarios" class="view hidden">
+                <div class="page-h"><h2>Usuarios y roles</h2><span id="cntUsr"></span></div>
+
+                <div class="panel" style="margin-bottom:12px">
+                    <div class="panel-h">Alta de usuario</div>
+                    <form id="formUsr" class="panel-b form-grid">
+                        <label class="f">
+                            Usuario
+                            <input id="usrNombre" required minlength="3" maxlength="50" autocomplete="off">
+                        </label>
+                        <label class="f">
+                            Contraseña
+                            <input id="usrPass" type="password" required minlength="6" maxlength="100" autocomplete="new-password">
+                        </label>
+                        <label class="f">
+                            Rol
+                            <select id="usrRol">
+                                <option value="operador">Operador</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </label>
+                        <div class="full"><button class="btn btn-primary" type="submit">Crear usuario</button></div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="scroll">
+                        <table class="tbl">
+                            <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Creado</th><th></th></tr></thead>
+                            <tbody id="tbUsr"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <p class="muted">Los cambios de rol o estado aplican por completo cuando el usuario inicia sesión de nuevo.</p>
+            </section>
+
+        </main>
+
+        <footer class="statusbar">
+            <span id="stConn"><i class="dot"></i><span id="stConnTxt">CONECTADO</span></span>
+            <span id="stSync">—</span>
+        </footer>
+    </div>
+
+    <dialog id="dlgMov">
+        <form id="formMov">
+            <div class="dlg-h">Registrar movimiento</div>
+            <div class="dlg-b">
+                <label class="f">
+                    Producto
+                    <select id="movProducto" required></select>
+                </label>
+                <div id="movStock" class="hint"></div>
+                <div class="seg">
+                    <input type="radio" name="tipo" id="tipoE" value="entrada" checked>
+                    <label for="tipoE">ENTRADA</label>
+                    <input type="radio" name="tipo" id="tipoS" value="salida">
+                    <label for="tipoS">SALIDA</label>
+                </div>
+                <label class="f">
+                    Cantidad
+                    <input id="movCantidad" type="number" min="1" required>
+                </label>
+                <label class="f">
+                    Observación
+                    <input id="movObs" maxlength="500">
+                </label>
+                <div id="movErr" class="msg-err"></div>
+            </div>
+            <div class="dlg-f">
+                <button type="button" class="btn" id="btnCancelMov">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Confirmar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toasts"></div>
+    <script src="app.js"></script>
+</body>
+</html>
